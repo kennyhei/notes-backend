@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 const express = require('express')
 const cors = require('cors')
 const app = express()
-const Note = require('./models/Note')
+const Note = require('./models/note')
 
 const logger = (request, response, next) => {
     console.log('Method:', request.method)
