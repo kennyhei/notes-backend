@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "watch": "nodemon index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node_modules/.bin/jest --verbose test"
   },
   "author": "Kenny Heinonen",
   "license": "MIT",
@@ -17,6 +17,8 @@
     "mongoose": "^5.0.0-rc1"
   },
   "devDependencies": {
+    "jest": "^22.0.4",
+    "mocha": "^4.1.0",
     "nodemon": "^1.14.7"
   }
 }
