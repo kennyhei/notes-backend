@@ -1,112 +1,26 @@
-const mongoose = require('mongoose')
 const express = require('express')
-const cors = require('cors')
 const app = express()
-const Note = require('./models/note')
+const cors = require('cors')
+const mongoose = require('mongoose')
+const middleware = require('./utils/middleware')
 
-const logger = (request, response, next) => {
-    console.log('Method:', request.method)
-    console.log('Path:  ', request.path)
-    console.log('Body:  ', request.body)
-    console.log('---')
-    next()
-}
-
-const error = (request, response) => {
-    response.status(404).send({ error: 'unknown endpoint' })
-}
-
-app.use(express.static('build'))
 app.use(cors())
 app.use(express.json()) // to support JSON-encoded bodies
-app.use(logger)
+app.use(express.static('build'))
+app.use(middleware.logger)
 
-const formatNote = (note) => {
-    return {
-        id: note._id,
-        content: note.content,
-        date: note.date,
-        important: note.important,
-    }
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config()
 }
+  
+const mongoUrl = process.env.MONGODB_URI
+mongoose.connect(mongoUrl)
+mongoose.Promise = global.Promise
 
-app.get('/', (req, res) => {
-    res.send('<h1>Hello world!</h1>')
-})
+const notesRouter = require('./controllers/notes')
+app.use('/api/notes', notesRouter)
 
-app.get('/api/notes', (req, res) => {
-    Note.find({}, { __v: 0 }).then(notes => {
-        res.json(notes.map(formatNote))
-    })
-})
-
-app.get('/api/notes/:id', (req, res) => {
-
-    Note.findById(req.params.id).then(note => {
-        if (note) {
-            res.json(formatNote(note))
-        } else {
-            res.status(404).end()
-        }
-    })
-    .catch(error => {
-        console.log(error)
-        res.status(400).send({ error: 'malformatted id' })
-    })
-})
-
-app.delete('/api/notes/:id', (req, res) => {
-
-    Note.findByIdAndRemove(req.params.id)
-        .then(result => {
-            res.status(204).end()
-        })
-        .catch(error => {
-            res.status(400).send({ error: 'malformatted id' })
-        })
-})
-
-app.post('/api/notes', (req, res) => {
-    const body = req.body
-
-    if (body.content === undefined) {
-        res.status(400).json({ error: 'content missing' })
-        return
-    }
-
-    const note = new Note({
-        content: body.content,
-        important: body.important || false,
-        date: body.date || new Date()
-    })
-
-    note.save()
-        .then(formatNote)
-        .then(savedAndFormattedNote => {
-            res.json(savedAndFormattedNote)
-        })
-})
-
-app.put('/api/notes/:id', (req, res) => {
-    const body = req.body
-
-    const note = {
-        content: body.content,
-        important: body.important
-    }
-
-    Note.findByIdAndUpdate(req.params.id, note, { new: true} )
-        .then(formatNote)
-        .then(updatedAndFormattedNote => {
-            res.json(updatedAndFormattedNote)
-        })
-        .catch(error => {
-            console.log(error)
-            res.status(400).send({ error: 'malformatted id' })
-        })
-})
-
-app.use(error)
+app.use(middleware.error)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
