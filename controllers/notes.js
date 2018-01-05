@@ -10,45 +10,43 @@ const formatNote = (note) => {
     }
 }
 
-notesRouter.get('/', (req, res) => {
-    Note.find({}, { __v: 0 })
-        .then(notes => {
-            res.json(notes.map(formatNote))
-        })
+notesRouter.get('/', async (req, res) => {
+    const notes = await Note.find({}, { __v: 0 })
+    res.json(notes.map(formatNote))
 })
 
-notesRouter.get('/:id', (req, res) => {
+notesRouter.get('/:id', async (req, res) => {
 
-    Note.findById(req.params.id).then(note => {
+    try {
+        const note = await Note.findById(req.params.id)
+
         if (note) {
             res.json(formatNote(note))
         } else {
             res.status(404).end()
         }
-    })
-    .catch(error => {
+
+    } catch (error) {
         console.log(error)
         res.status(400).send({ error: 'malformatted id' })
-    })
+    }
 })
 
-notesRouter.delete('/:id', (req, res) => {
+notesRouter.delete('/:id', async (req, res) => {
 
-    Note.findByIdAndRemove(req.params.id)
-        .then(result => {
-            res.status(204).end()
-        })
-        .catch(error => {
-            res.status(400).send({ error: 'malformatted id' })
-        })
+    try {
+        await Note.findByIdAndRemove(req.params.id)
+        res.status(204).end()
+    } catch (error) {
+        res.status(400).send({ error: 'malformatted id' })
+    }
 })
 
-notesRouter.post('/', (req, res) => {
+notesRouter.post('/', async (req, res) => {
     const body = req.body
 
     if (body.content === undefined) {
-        res.status(400).json({ error: 'content missing' })
-        return
+        return res.status(400).json({ error: 'content missing' })
     }
 
     const note = new Note({
@@ -57,14 +55,16 @@ notesRouter.post('/', (req, res) => {
         date: body.date || new Date()
     })
 
-    note.save()
-        .then(formatNote)
-        .then(savedAndFormattedNote => {
-            res.json(savedAndFormattedNote)
-        })
+    try {
+        const savedNote = await note.save()
+        res.json(formatNote(savedNote))
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ error: 'something whent wrong...' })
+    }
 })
 
-notesRouter.put('/:id', (req, res) => {
+notesRouter.put('/:id', async (req, res) => {
     const body = req.body
 
     const note = {
@@ -72,15 +72,13 @@ notesRouter.put('/:id', (req, res) => {
         important: body.important
     }
 
-    Note.findByIdAndUpdate(req.params.id, note, { new: true })
-        .then(formatNote)
-        .then(updatedAndFormattedNote => {
-            res.json(updatedAndFormattedNote)
-        })
-        .catch(error => {
-            console.log(error)
-            res.status(400).send({ error: 'malformatted id' })
-        })
+    try {
+        const updatedNote = await Note.findByIdAndUpdate(req.params.id, note, { new: true })
+        res.json(formatNote(updatedNote))
+    } catch (error) {
+        console.log(error)
+        res.status(400).send({ error: 'malformatted id' })
+    }
 })
 
 module.exports = notesRouter
