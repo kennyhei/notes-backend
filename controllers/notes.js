@@ -27,7 +27,7 @@ notesRouter.get('/:id', async (req, res) => {
         }
 
     } catch (error) {
-        console.log(error)
+        //console.log(error)
         res.status(400).send({ error: 'malformatted id' })
     }
 })
@@ -59,7 +59,7 @@ notesRouter.post('/', async (req, res) => {
         const savedNote = await note.save()
         res.json(formatNote(savedNote))
     } catch (error) {
-        console.log(error)
+        //console.log(error)
         res.status(500).json({ error: 'something whent wrong...' })
     }
 })
