@@ -13,15 +13,6 @@ const formatNote = (note) => {
     }
 }
 
-const getTokenFrom = (request) => {
-    const authorization = request.get('authorization')
-    if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
-        return authorization.substring(7)
-    }
-
-    return null
-}
-
 notesRouter.get('/', async (req, res) => {
     const notes = await Note
         .find({}, { __v: 0 })
@@ -65,8 +56,7 @@ notesRouter.post('/', async (req, res) => {
         let decodedToken
 
         try {
-            const token = getTokenFrom(req)
-            decodedToken = jwt.verify(token, process.env.SECRET)
+            decodedToken = jwt.verify(req.token, process.env.SECRET)
         } catch (error) {
             return res.status(401).json({ error: 'token missing or invalid' })
         }

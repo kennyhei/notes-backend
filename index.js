@@ -11,6 +11,7 @@ app.use(cors())
 app.use(express.json()) // to support JSON-encoded bodies
 app.use(express.static('build'))
 app.use(middleware.logger)
+app.use(middleware.tokenExtractor)
   
 mongoose.connect(config.mongoUrl)
 mongoose.Promise = global.Promise
