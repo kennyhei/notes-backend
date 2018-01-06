@@ -3,7 +3,7 @@ const supertest = require('supertest')
 const { app, server, startServer } = require('../index')
 const api = supertest(app)
 const Note = require('../models/note')
-const { format, initialNotes, nonExistingId, notesInDb, createUser, createTokenForUser } = require('./test_helper')
+const { initialNotes, nonExistingId, notesInDb, createUser, createTokenForUser } = require('./test_helper')
 
 describe('when there is initially some notes saved', () => {
 
@@ -60,15 +60,15 @@ describe('when there is initially some notes saved', () => {
     it('404 returned by GET /api/notes/:id with nonexisting valid id', async () => {
         const validNonexistingId = await nonExistingId()
     
-        const response = await api
+        await api
             .get(`/api/notes/${validNonexistingId}`)
             .expect(404)
     })
 
     it('400 is returned by GET /api/notes/:id with invalid id', async () => {
-        const invalidId = "5a3d5da59070081a82a3445"
+        const invalidId = '5a3d5da59070081a82a3445'
     
-        const response = await api
+        await api
             .get(`/api/notes/${invalidId}`)
             .expect(400)
     })
@@ -143,7 +143,7 @@ describe('when there is initially some notes saved', () => {
 
     describe('deletion of a note', async () => {
         let addedNote
-        let otherToken
+        /*let otherToken*/
 
         before(async () => {
             addedNote = new Note({
@@ -154,7 +154,7 @@ describe('when there is initially some notes saved', () => {
             await addedNote.save()
 
             const otherUser = await createUser('mluukkai')
-            otherToken = await createTokenForUser(otherUser._id)
+            await createTokenForUser(otherUser._id)
         })
 
         it('DELETE /api/notes/:id succeeds with proper status code', async () => {

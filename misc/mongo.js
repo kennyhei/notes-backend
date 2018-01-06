@@ -14,10 +14,10 @@ console.log(url)
 
 mongoose.connect(url).then(result => {
     console.log(result)
-})
-.catch(error => {
+}).catch(error => {
     console.log(error)
 })
+
 mongoose.Promise = global.Promise
 
 const Note = mongoose.model('Note', {

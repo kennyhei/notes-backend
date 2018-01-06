@@ -3,7 +3,7 @@ const supertest = require('supertest')
 const { app, server, startServer } = require('../index')
 const api = supertest(app)
 const User = require('../models/user')
-const { format, initialNotes, nonExistingId, notesInDb, usersInDb } = require('./test_helper')
+const { usersInDb } = require('./test_helper')
 
 describe('when there is initially one user in db', function() {
 
@@ -24,10 +24,11 @@ describe('when there is initially one user in db', function() {
             password: 'salainen'
         }
 
-        await api.post('/api/users')
-                 .send(newUser)
-                 .expect(200)
-                 .expect('Content-Type', /application\/json/)
+        await api
+            .post('/api/users')
+            .send(newUser)
+            .expect(200)
+            .expect('Content-Type', /application\/json/)
 
         const usersAfterOperation = await usersInDb()
 
@@ -45,10 +46,11 @@ describe('when there is initially one user in db', function() {
             password: 'salainen'
         }
 
-        const result = await api.post('/api/users')
-                                .send(newUser)
-                                .expect(400)
-                                .expect('Content-Type', /application\/json/)
+        const result = await api
+            .post('/api/users')
+            .send(newUser)
+            .expect(400)
+            .expect('Content-Type', /application\/json/)
 
         expect(result.body).to.deep.equal({ error: 'username must be unique' })
 
