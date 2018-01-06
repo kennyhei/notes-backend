@@ -62,11 +62,13 @@ notesRouter.post('/', async (req, res) => {
 
     try {
 
-        const token = getTokenFrom(req)
-        const decodedToken = jwt.verify(token, process.env.SECRET)
+        let decodedToken
 
-        if (!token || !decodedToken.id) {
-            return Response.status(401).json({ error: 'token missing or invalid' })
+        try {
+            const token = getTokenFrom(req)
+            decodedToken = jwt.verify(token, process.env.SECRET)
+        } catch (error) {
+            return res.status(401).json({ error: 'token missing or invalid' })
         }
 
         if (body.content === undefined) {

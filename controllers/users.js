@@ -4,7 +4,7 @@ const User = require('../models/user')
 
 const formatUser = (user) => {
     return {
-        id: user.id,
+        id: user._id,
         username: user.username,
         name: user.name,
         notes: user.notes

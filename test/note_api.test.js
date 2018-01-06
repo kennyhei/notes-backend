@@ -1,13 +1,18 @@
 const expect = require('chai').expect
 const supertest = require('supertest')
-const { app, server } = require('../index')
+const { app, server, startServer } = require('../index')
 const api = supertest(app)
 const Note = require('../models/note')
-const { format, initialNotes, nonExistingId, notesInDb } = require('./test_helper')
+const { format, initialNotes, nonExistingId, notesInDb, createUser, createTokenForUser } = require('./test_helper')
 
 describe('when there is initially some notes saved', () => {
 
+    let token
+    let user
+
     before(async () => {
+        startServer()
+
         // Remove all documents
         await Note.remove()
 
@@ -19,6 +24,9 @@ describe('when there is initially some notes saved', () => {
 
         // Wait that all promises are resolved (i.e. all notes have been saved)
         await Promise.all(promiseArray)
+
+        user = await createUser('kennyhei')
+        token = await createTokenForUser(user._id)
     })
 
     it('all notes are returned as json by GET /api/notes', async () => {
@@ -65,8 +73,48 @@ describe('when there is initially some notes saved', () => {
             .expect(400)
     })
 
-    // TODO Fix later
-    describe.skip('addition of a new note', async () => {
+    describe('addition of a new note', async () => {
+
+        it('POST /api/blogs fails if user has not authenticated', async () => {
+            const notesAtBeginningOfOperation = await notesInDb()
+
+            const newNote = {
+                content: 'async/await yksinkertaistaa asynkronisten funktioiden kutsua',
+                important: true
+            }
+
+            const result = await api
+                .post('/api/notes')
+                .send(newNote)
+                .expect(401)
+
+            expect(result.body).to.deep.equal({ error: 'token missing or invalid' })
+
+            const notesAfterOperation = await notesInDb()
+            expect(notesAfterOperation.length).to.equal(notesAtBeginningOfOperation.length)
+
+            const contents = notesAfterOperation.map(r => r.content)
+            expect(contents).not.to.deep.include('async/await yksinkertaistaa asynkronisten funktioiden kutsua')
+        })
+
+        it('POST /api/notes fails with proper status code if content is missing', async () => {
+            const newNote = {
+                important: true
+            }
+      
+            const notesAtBeginningOfOperation = await notesInDb()
+      
+            const result = await api
+                .post('/api/notes')
+                .set('Authorization', `bearer ${token}`)
+                .send(newNote)
+                .expect(400)
+
+            expect(result.body).to.deep.equal({ error: 'content missing' })
+      
+            const notesAfterOperation = await notesInDb()
+            expect(notesAfterOperation.length).to.equal(notesAtBeginningOfOperation.length)
+        })
 
         it('POST /api/notes succeeds with valid data', async () => {
             const notesAtBeginningOfOperation = await notesInDb()
@@ -78,6 +126,7 @@ describe('when there is initially some notes saved', () => {
 
             await api
                 .post('/api/notes')
+                .set('Authorization', `bearer ${token}`)
                 .send(newNote)
                 .expect(200)
                 .expect('Content-Type', /application\/json/)
@@ -90,29 +139,11 @@ describe('when there is initially some notes saved', () => {
             expect(contents).to.include('async/await yksinkertaistaa asynkronisten funktioiden kutsua')
         })
 
-        it('POST /api/notes fails with proper status code if content is missing', async () => {
-            const newNote = {
-                important: true
-            }
-      
-            const notesAtBeginningOfOperation = await notesInDb()
-      
-            await api
-                .post('/api/notes')
-                .send(newNote)
-                .expect(400)
-      
-            const notesAfterOperation = await notesInDb()
-      
-            const contents = notesAfterOperation.map(r => r.content)
-      
-            expect(notesAfterOperation.length).to.equal(notesAtBeginningOfOperation.length)
-        })
-
     })
 
     describe('deletion of a note', async () => {
         let addedNote
+        let otherToken
 
         before(async () => {
             addedNote = new Note({
@@ -121,6 +152,9 @@ describe('when there is initially some notes saved', () => {
             })
 
             await addedNote.save()
+
+            const otherUser = await createUser('mluukkai')
+            otherToken = await createTokenForUser(otherUser._id)
         })
 
         it('DELETE /api/notes/:id succeeds with proper status code', async () => {
@@ -128,6 +162,7 @@ describe('when there is initially some notes saved', () => {
       
             await api
                 .delete(`/api/notes/${addedNote._id}`)
+                .set('Authorization', `bearer ${token}`)
                 .expect(204)
       
             const notesAfterOperation = await notesInDb()
