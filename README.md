@@ -4,6 +4,6 @@ https://muistiinpanot-backend.herokuapp.com
 
 Login with `admin:secret`
 
-# API
+## API
 * `/api/notes`
 * `/api/users`
