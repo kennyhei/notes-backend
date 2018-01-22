@@ -1,4 +1,3 @@
-const expect = require('chai').expect
 const supertest = require('supertest')
 const { app, server, startServer } = require('../index')
 const api = supertest(app)
@@ -10,8 +9,8 @@ describe('when there is initially some notes saved', () => {
     let token
     let user
 
-    before(async () => {
-        startServer()
+    beforeAll(async () => {
+        //startServer()
 
         // Remove all documents
         await Note.remove()
@@ -29,7 +28,7 @@ describe('when there is initially some notes saved', () => {
         token = await createTokenForUser(user._id)
     })
 
-    it('all notes are returned as json by GET /api/notes', async () => {
+    test('all notes are returned as json by GET /api/notes', async () => {
         const notesInDatabase = await notesInDb()
 
         const response = await api
@@ -37,15 +36,15 @@ describe('when there is initially some notes saved', () => {
             .expect(200)
             .expect('Content-Type', /application\/json/)
 
-        expect(response.body.length).to.equal(notesInDatabase.length)
+        expect(response.body.length).toBe(notesInDatabase.length)
 
         const returnedContents = response.body.map(n => n.content)
         notesInDatabase.forEach(note => {
-            expect(returnedContents).to.include(note.content)
+            expect(returnedContents).toContain(note.content)
         })
     })
 
-    it('individual notes are returned as json by GET /api/notes/:id', async () => {
+    test('individual notes are returned as json by GET /api/notes/:id', async () => {
         const notesInDatabase = await notesInDb()
         const aNote = notesInDatabase[0]
     
@@ -54,10 +53,10 @@ describe('when there is initially some notes saved', () => {
             .expect(200)
             .expect('Content-Type', /application\/json/)
     
-        expect(response.body.content).to.equal(aNote.content)
+        expect(response.body.content).toBe(aNote.content)
     })
 
-    it('404 returned by GET /api/notes/:id with nonexisting valid id', async () => {
+    test('404 returned by GET /api/notes/:id with nonexisting valid id', async () => {
         const validNonexistingId = await nonExistingId()
     
         await api
@@ -65,7 +64,7 @@ describe('when there is initially some notes saved', () => {
             .expect(404)
     })
 
-    it('400 is returned by GET /api/notes/:id with invalid id', async () => {
+    test('400 is returned by GET /api/notes/:id with invalid id', async () => {
         const invalidId = '5a3d5da59070081a82a3445'
     
         await api
@@ -75,7 +74,7 @@ describe('when there is initially some notes saved', () => {
 
     describe('addition of a new note', async () => {
 
-        it('POST /api/blogs fails if user has not authenticated', async () => {
+        test('POST /api/blogs fails if user has not authenticated', async () => {
             const notesAtBeginningOfOperation = await notesInDb()
 
             const newNote = {
@@ -88,16 +87,16 @@ describe('when there is initially some notes saved', () => {
                 .send(newNote)
                 .expect(401)
 
-            expect(result.body).to.deep.equal({ error: 'token missing or invalid' })
+            expect(result.body).toEqual({ error: 'token missing or invalid' })
 
             const notesAfterOperation = await notesInDb()
-            expect(notesAfterOperation.length).to.equal(notesAtBeginningOfOperation.length)
+            expect(notesAfterOperation.length).toBe(notesAtBeginningOfOperation.length)
 
             const contents = notesAfterOperation.map(r => r.content)
-            expect(contents).not.to.deep.include('async/await yksinkertaistaa asynkronisten funktioiden kutsua')
+            expect(contents).not.toContain('async/await yksinkertaistaa asynkronisten funktioiden kutsua')
         })
 
-        it('POST /api/notes fails with proper status code if content is missing', async () => {
+        test('POST /api/notes fails with proper status code if content is missing', async () => {
             const newNote = {
                 important: true
             }
@@ -110,13 +109,13 @@ describe('when there is initially some notes saved', () => {
                 .send(newNote)
                 .expect(400)
 
-            expect(result.body).to.deep.equal({ error: 'content missing' })
+            expect(result.body).toEqual({ error: 'content missing' })
       
             const notesAfterOperation = await notesInDb()
-            expect(notesAfterOperation.length).to.equal(notesAtBeginningOfOperation.length)
+            expect(notesAfterOperation.length).toBe(notesAtBeginningOfOperation.length)
         })
 
-        it('POST /api/notes succeeds with valid data', async () => {
+        test('POST /api/notes succeeds with valid data', async () => {
             const notesAtBeginningOfOperation = await notesInDb()
 
             const newNote = {
@@ -133,10 +132,10 @@ describe('when there is initially some notes saved', () => {
 
             const notesAfterOperation = await notesInDb()
 
-            expect(notesAfterOperation.length).to.equal(notesAtBeginningOfOperation.length + 1)
+            expect(notesAfterOperation.length).toBe(notesAtBeginningOfOperation.length + 1)
 
             const contents = notesAfterOperation.map(r => r.content)
-            expect(contents).to.include('async/await yksinkertaistaa asynkronisten funktioiden kutsua')
+            expect(contents).toContain('async/await yksinkertaistaa asynkronisten funktioiden kutsua')
         })
 
     })
@@ -145,7 +144,7 @@ describe('when there is initially some notes saved', () => {
         let addedNote
         /*let otherToken*/
 
-        before(async () => {
+        beforeAll(async () => {
             addedNote = new Note({
                 content: 'poisto pyynnöllä HTTP DELETE',
                 important: false
@@ -157,7 +156,7 @@ describe('when there is initially some notes saved', () => {
             await createTokenForUser(otherUser._id)
         })
 
-        it('DELETE /api/notes/:id succeeds with proper status code', async () => {
+        test('DELETE /api/notes/:id succeeds with proper status code', async () => {
             const notesAtBeginningOfOperation = await notesInDb()
       
             await api
@@ -169,13 +168,13 @@ describe('when there is initially some notes saved', () => {
       
             const contents = notesAfterOperation.map(r => r.content)
       
-            expect(contents).not.to.include(addedNote.content)
-            expect(notesAfterOperation.length).to.equal(notesAtBeginningOfOperation.length - 1)
+            expect(contents).not.toContain(addedNote.content)
+            expect(notesAfterOperation.length).toBe(notesAtBeginningOfOperation.length - 1)
         })
       
     })
     
-    after(() => {
+    afterAll(() => {
         server.close()
     })
 })

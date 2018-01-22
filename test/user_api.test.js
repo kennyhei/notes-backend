@@ -1,4 +1,3 @@
-const expect = require('chai').expect
 const supertest = require('supertest')
 const { app, server, startServer } = require('../index')
 const api = supertest(app)
@@ -7,8 +6,8 @@ const { usersInDb } = require('./test_helper')
 
 describe('when there is initially one user in db', function() {
 
-    before(async () => {
-        startServer()
+    beforeAll(async () => {
+        //startServer()
         
         await User.remove({})
         const user = new User({ username: 'root', password: 'secret' })
@@ -32,9 +31,9 @@ describe('when there is initially one user in db', function() {
 
         const usersAfterOperation = await usersInDb()
 
-        expect(usersAfterOperation.length).to.equal(usersBeforeOperation.length + 1)
+        expect(usersAfterOperation.length).toBe(usersBeforeOperation.length + 1)
         const usernames = usersAfterOperation.map(u => u.username)
-        expect(usernames).to.include(newUser.username)
+        expect(usernames).toContain(newUser.username)
     })
 
     it('POST /api/users fails with proper status code and message if username already exists', async () => {
@@ -52,13 +51,13 @@ describe('when there is initially one user in db', function() {
             .expect(400)
             .expect('Content-Type', /application\/json/)
 
-        expect(result.body).to.deep.equal({ error: 'username must be unique' })
+        expect(result.body).toEqual({ error: 'username must be unique' })
 
         const usersAfterOperation = await usersInDb()
-        expect(usersAfterOperation.length).to.equal(usersBeforeOperation.length)
+        expect(usersAfterOperation.length).toBe(usersBeforeOperation.length)
     })
 
-    after(() => {
+    afterAll(() => {
         server.close()
     })
 })

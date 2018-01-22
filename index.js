@@ -38,6 +38,9 @@ server.on('close', () => {
     mongoose.connection.close()
 })
 
+mongoose.connect(config.mongoUrl)
+server = http.createServer(app)
+
 const startServer = async () => {
     if (server._handle !== null) {
         return

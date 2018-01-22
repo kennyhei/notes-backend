@@ -1,22 +1,21 @@
 const palindrom = require('../utils/for_testing').palindrom
-const expect = require('chai').expect
 
 describe('palindrom', () => {
-    it('of a', () => {
+    test('of a', () => {
         const result = palindrom('a')
 
-        expect(result).to.equal('a')
+        expect(result).toBe('a')
     })
 
-    it('of react', () => {
+    test('of react', () => {
         const result = palindrom('react')
 
-        expect(result).to.equal('tcaer')
+        expect(result).toBe('tcaer')
     })
 
-    it('of saippuakauppias', () => {
+    test('of saippuakauppias', () => {
         const result = palindrom('saippuakauppias')
 
-        expect(result).to.equal('saippuakauppias')
+        expect(result).toBe('saippuakauppias')
     })
 })
